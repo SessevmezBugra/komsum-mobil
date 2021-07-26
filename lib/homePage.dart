@@ -1,16 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:http/http.dart' as http;
 import 'package:komsum/geography/bloc/filter/geographyFilterBarrel.dart';
 import 'package:komsum/geography/widget/geographyFilterListWidget.dart';
 import 'package:komsum/helper/common/appbar.dart';
-import 'package:komsum/helper/common/filterbar.dart';
+import 'package:komsum/helper/constants.dart';
+import 'package:komsum/post/bloc/list/postListBarrel.dart';
+import 'package:komsum/post/model/post.dart';
+import 'package:komsum/post/widget/postListWidget.dart';
 import 'package:komsum/tag/bloc/filter/tagFilterBarrel.dart';
-import 'package:komsum/tag/bloc/list/tagListBarrel.dart';
 import 'package:komsum/tag/widget/tagFilterListWidget.dart';
 
-import 'geography/bloc/list/geographyListBarrel.dart';
+import 'helper/common/loadingIndicator.dart';
 import 'helper/common/sidebar.dart';
 import 'helper/common/subheader.dart';
 
@@ -30,47 +31,58 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<GeographyListBloc>(
-          create: (BuildContext context) =>
-              GeographyListBloc(httpClient: http.Client())
-                ..add(GeographyCityListLoad()),
-        ),
-        BlocProvider<TagListBloc>(
-          create: (BuildContext context) =>
-              TagListBloc(httpClient: http.Client())..add(TagListLoad()),
-        ),
-        BlocProvider<TagFilterBloc>(
-          create: (BuildContext context) => TagFilterBloc(),
-        ),
-        BlocProvider<GeographyFilterBloc>(
-          create: (BuildContext context) => GeographyFilterBloc(),
-        )
-      ],
-      child: Scaffold(
-        key: _scaffoldKey,
-        drawer: SidebarMenu(),
-        body: CustomScrollView(
-          slivers: [
-            AppBarWidget(text: "Komsum"),
-            SliverPersistentHeader(
-              delegate: SliverAppBarDelegate(
-                minHeight: 50,
-                maxHeight: 60,
-                child: FittedBox(
-                  child: Column(
-                    children: [
-                      TagFilterList(),
-                      GeographyFilterList()
-                    ],
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: SidebarMenu(),
+      body: CustomScrollView(
+        slivers: [
+          AppBarWidget(text: "Komsum"),
+          BlocBuilder<TagFilterBloc, TagFilterState>(
+              builder: (context, tagState) {
+            return BlocBuilder<GeographyFilterBloc, GeographyFilterState>(
+                builder: (context, geographyState) {
+              if (geographyState.geographyFilterList.length == 0 &&
+                  tagState.tags.length == 0) {
+                return SliverToBoxAdapter(child: Container());
+              } else {
+                return SliverPersistentHeader(
+                  delegate: SliverAppBarDelegate(
+                    minHeight: 50,
+                    maxHeight: 60,
+                    child: FittedBox(
+                      child: Column(
+                        children: [
+                          TagFilterList(),
+                          GeographyFilterList(),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
-
-          ],
-        ),
+                );
+              }
+            });
+          }),
+          SliverToBoxAdapter(
+            child: Divider(),
+          ),
+          SliverToBoxAdapter(
+            child:
+            BlocProvider<PostListBloc>(
+              create: (BuildContext context) => PostListBloc(
+                tagFilterBloc: BlocProvider.of<TagFilterBloc>(context),
+                geographyFilterBloc: BlocProvider.of<GeographyFilterBloc>(context),
+              )..add(PostListLoad()),
+              child: PostList(),
+            )
+          )
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, RouteNames.createPostPage);
+        },
+        child: const Icon(Icons.send),
+        backgroundColor: Colors.green,
       ),
     );
   }

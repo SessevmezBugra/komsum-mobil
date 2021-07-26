@@ -1,89 +1,109 @@
-import 'dart:convert';
+import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:komsum/geography/bloc/filter/geographyFilterBarrel.dart';
+import 'package:komsum/geography/model/geography.dart';
+import 'package:komsum/helper/constants.dart';
 import 'package:komsum/post/bloc/list/postListBarrel.dart';
 import 'package:http/http.dart' as http;
-import 'package:komsum/post/model/post.dart';
 import 'package:komsum/post/model/postPage.dart';
+import 'package:komsum/tag/bloc/filter/tagFilterBarrel.dart';
+import 'package:komsum/tag/model/tag.dart';
 
-class PostBloc extends Bloc<PostListEvent, PostListState> {
-  PostBloc({@required this.httpClient}) : super(const PostListState());
+class PostListBloc extends Bloc<PostListEvent, PostListState> {
+  final http.Client httpClient = http.Client();
+  final GeographyFilterBloc geographyFilterBloc;
+  final TagFilterBloc tagFilterBloc;
 
-  final http.Client httpClient;
+  StreamSubscription geographyFilterSubscription;
+  StreamSubscription tagFilterSubscription;
+
+  PostListBloc(
+      {@required this.geographyFilterBloc, @required this.tagFilterBloc})
+      : super(PostListLoadInProgress()) {
+    geographyFilterSubscription = geographyFilterBloc.stream.listen((state) {
+      add(PostListLoad());
+    });
+    tagFilterSubscription = tagFilterBloc.stream.listen((state) {
+      add(PostListLoad());
+    });
+  }
 
   @override
   Stream<PostListState> mapEventToState(PostListEvent event) async* {
-    if (event is PostListFetched) {
-      yield await _mapPostFetchedToState(event);
+    if (event is PostListLoad) {
+      yield* _mapPostListLoadToState();
     }
   }
 
-  Future<PostListState> _mapPostFetchedToState(PostListFetched event) async {
+  Stream<PostListState> _mapPostListLoadToState() async* {
     try {
-      if (state.status == PostStatus.initial) {
-        final posts = await _fetchPosts();
-        return state.copyWith(
-            status: PostStatus.success,
-            posts: posts.content,
-            hasReachedMax: posts.last,
-            page: state.page + 1
-        );
-      }
-
-      if (event.cityId == state.cityId && event.districtId == state.districtId &&
-          event.neighborhoodId == state.neighborhoodId &&
-          event.streetId == state.streetId &&
-          event.tagIds == state.tagIds) {
-        if(state.hasReachedMax) {
-          return state;
-        }else {
-          final posts = await _fetchPosts();
-          return state.copyWith(
-              status: PostStatus.success,
-              posts: posts.content,
-              hasReachedMax: posts.last,
-              page: state.page + 1
-          );
-        }
-      }
-
-      final posts = await _fetchPosts();
-      return posts.content.isEmpty
-          ? state.copyWith(hasReachedMax: true)
-          : state.copyWith(
-        status: PostStatus.success,
-        posts: List.of(state.posts)
-          ..addAll(posts.content),
-        hasReachedMax: false,
+      print("1");
+      yield PostListLoadInProgress();
+      Geography country = geographyFilterBloc.state.geographyFilterList.firstWhere((e) => e.type == GeographyConst.country, orElse: () => Geography(218, null, null));
+      Geography city = geographyFilterBloc.state.geographyFilterList.firstWhere((e) => e.type == GeographyConst.city, orElse: () => Geography(null, null, null));
+      Geography district = geographyFilterBloc.state.geographyFilterList.firstWhere((e) => e.type == GeographyConst.district, orElse: () => Geography(null, null, null));
+      Geography neighborhood = geographyFilterBloc.state.geographyFilterList.firstWhere((e) => e.type == GeographyConst.neighborhood, orElse: () => Geography(null, null, null));
+      Geography street = geographyFilterBloc.state.geographyFilterList.firstWhere((e) => e.type == GeographyConst.street, orElse: () => Geography(null, null, null));
+      List<Tag> tags = tagFilterBloc.state.tags;
+      print("2");
+      final postPage = await _fetchPosts(
+        countryId: country.id,
+        cityId: city.id,
+        districtId: district.id,
+        neighborhoodId: neighborhood.id,
+        streetId: street.id,
+        tagIds: tags.map((e) => e.id).toList(),
       );
-    } on Exception {
-      return state.copyWith(status: PostStatus.failure);
+      print("3");
+      yield PostListLoadedSuccess(postPage);
+      print("4");
+    } catch (_) {
+      print("5");
+      print(_);
+      yield PostListLoadFailure();
     }
+  }
+
+  Future<PostPage> _fetchPosts({
+    int countryId,
+    int cityId,
+    int districtId,
+    int neighborhoodId,
+    int streetId,
+    List<String> tagIds,
+    int pageNumber
+  }) async {
+    var host = KomsumConst.host;
+    final queryParameters = {
+      'countryId': countryId != null ? countryId.toString() : '',
+      'cityId': cityId != null ? cityId.toString() : '',
+      'districtId': districtId != null ? districtId.toString() : '',
+      'neighborhoodId': neighborhoodId != null ? neighborhoodId.toString() : '',
+      'streetId': streetId != null ? streetId.toString() : '',
+      'tagIds': tagIds,
+      'pageNumber': pageNumber != null ? pageNumber.toString() : '',
+    };
+    print('queryParameters: ' + queryParameters.toString());
+    final response = await httpClient.get(
+      Uri.http('$host:8093', '/feed/post', queryParameters),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+    );
+    print(response.statusCode);
+    print(response.body);
+    if (response.statusCode == 200) {
+      return postPageFromJson(response.body);
+    }
+    throw Exception('error fetching post list');
+  }
+
+  @override
+  Future<void> close() {
+    geographyFilterSubscription.cancel();
+    tagFilterSubscription.cancel();
+    return super.close();
   }
 }
-
-Future<PostPage> _fetchPosts({
-  int page,
-  int cityId,
-  int districtId,
-  int neighborhoodId,
-  int streetId,
-  List<int> tagIds
-}) async {
-  final response = await httpClient.get(
-      Uri.http('46.101.87.81:8093', '/feed/post', {
-        "pageNumber": page ?? 0,
-        "cityId": cityId ?? "",
-        "districtId": districtId ?? "",
-        "neighborhoodId": neighborhoodId ?? "",
-        "streetId": streetId ?? "",
-        "tagIds": tagIds ?? []
-      }),
-      headers: {'Content-Type': 'application/json; charset=utf-8'});
-
-  if (response.statusCode == 200) {
-    return postPageFromJson(utf8.decode(response.bodyBytes));
-  }
-  throw Exception('error fetching posts');
-}}

@@ -5,7 +5,7 @@ import 'package:komsum/tag/model/tag.dart';
 
 class TagFilterBloc extends Bloc<TagFilterEvent, TagFilterState> {
 
-  TagFilterBloc() : super(TagFilterListLoadedSuccess([]));
+  TagFilterBloc() : super(TagFilterState([]));
 
   @override
   Stream<TagFilterState> mapEventToState(TagFilterEvent event) async*{
@@ -17,22 +17,16 @@ class TagFilterBloc extends Bloc<TagFilterEvent, TagFilterState> {
   }
 
   Stream<TagFilterState> _mapTagAddedToState(Tag tag) async*{
-    if(state is TagFilterListLoadedSuccess) {
-      // yield TagFilterListLoadInProgress();
-      List<Tag> tags =  List.from((state as TagFilterListLoadedSuccess).tags)
+      List<Tag> tags =  List.from(state.tags)
       ..add(tag);
-      yield TagFilterListLoadedSuccess(tags);
-    }
+      yield TagFilterState(tags);
 
   }
 
   Stream<TagFilterState> _mapTagDeletedToState(Tag tag) async*{
-    if(state is TagFilterListLoadedSuccess) {
-      // yield TagFilterListLoadInProgress();
-      List<Tag> tags =  List.from((state as TagFilterListLoadedSuccess).tags)
+      List<Tag> tags =  List.from(state.tags)
         ..remove(tag);
-      yield TagFilterListLoadedSuccess(tags);
-    }
+      yield TagFilterState(tags);
   }
 
 }

@@ -15,12 +15,12 @@ class PostPage extends Equatable{
     this.last,
   });
 
-  final dynamic pageState;
+  final String pageState;
   final List<Post> content;
   final bool last;
 
   PostPage copyWith({
-    dynamic pageState,
+    String pageState,
     List<Post> content,
     bool last,
   }) =>

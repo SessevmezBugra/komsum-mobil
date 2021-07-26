@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:komsum/helper/constants.dart';
 import 'package:komsum/homePage.dart';
-import 'package:komsum/post/view/postListPage.dart';
+import 'package:komsum/post/view/createPostPage.dart';
 import 'package:komsum/widgets/customWidgets.dart';
-import 'package:provider/provider.dart';
 
 import 'customRoute.dart';
 
@@ -20,11 +19,13 @@ class Routes {
     if (pathElements[0] != '' || pathElements.length == 1) {
       return null;
     }
-    switch (pathElements[1]) {
+    switch ('/' + pathElements[1]) {
       case RouteNames.homePage:
         return CustomRoute<bool>(
             builder: (BuildContext context) => HomePage());
-
+      case RouteNames.createPostPage:
+        return CustomRoute<bool>(
+            builder: (BuildContext context) => CreatePostPage());
       default:
         return onUnknownRoute(RouteSettings(name: RouteNames.homePage));
     }

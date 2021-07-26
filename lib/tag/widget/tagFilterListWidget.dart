@@ -8,7 +8,7 @@ class TagFilterList extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TagFilterBloc, TagFilterState>(
       builder: (context, state) {
-        if(state is TagFilterListLoadedSuccess) {
+        if(state.tags.length > 0) {
           final tagFilterList = state.tags;
           return Wrap(
             children: List.generate(

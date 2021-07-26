@@ -26,7 +26,6 @@ class AppBarWidget extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
-      backgroundColor: Colors.blueGrey,
       centerTitle: centerTitle,
       // 3
       // 4

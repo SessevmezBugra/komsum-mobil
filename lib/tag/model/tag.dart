@@ -18,10 +18,10 @@ class Tag extends Equatable{
     this.enDesc,
   });
 
-  String id;
-  String key;
-  String trDesc;
-  String enDesc;
+  final String id;
+  final String key;
+  final String trDesc;
+  final String enDesc;
 
   Tag copyWith({
     String id,

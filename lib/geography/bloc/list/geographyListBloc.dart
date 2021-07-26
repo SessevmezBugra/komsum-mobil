@@ -23,6 +23,7 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
     if (event is GeographyCityListLoad) {
       yield* _mapGeographyCityListLoadToState();
     } else if (event is GeographyDistrictListLoad) {
+      print('g1');
       yield* _mapGeographyDistrictListLoadToState(event.geography);
     } else if (event is GeographyNeighborhoodListLoad) {
       yield* _mapGeographyNeighborhoodListLoadToState(event.geography);
@@ -40,6 +41,7 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
         cities.map(Geography.fromCityEntity).toList(),
       );
     } catch (_) {
+      print(_);
       yield GeographyListLoadFailure();
     }
   }

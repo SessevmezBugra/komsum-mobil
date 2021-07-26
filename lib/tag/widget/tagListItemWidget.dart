@@ -8,7 +8,7 @@ import 'package:komsum/tag/model/tag.dart';
 class TagListItem extends StatefulWidget {
   final Tag tag;
 
-  const TagListItem(this.tag, {Key key}) : super(key: key);
+  const TagListItem(this.tag, {Key key, String }) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {

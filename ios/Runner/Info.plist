@@ -41,5 +41,10 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Galeriye erisim icin izin verin</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Kameraya erisim icin izin verin</string>
+
 </dict>
 </plist>

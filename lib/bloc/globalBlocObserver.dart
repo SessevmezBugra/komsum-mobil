@@ -13,9 +13,10 @@ class GlobalBlocObserver extends BlocObserver {
     // print(transition);
   }
 
-  // @override
-  // void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
-  //   // print(error);
-  //   super.onError(bloc, error, stackTrace);
-  // }
+  @override
+  void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
+    print(error);
+    print(stackTrace);
+    super.onError(bloc, error, stackTrace);
+  }
 }
