@@ -106,21 +106,28 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
     // }
 
     Timer.periodic(new Duration(seconds: 10), (timer) async {
-      var currentDate = new DateTime.now();
-      var remainingTime = tokenResponse.expiresAt.difference(currentDate);
-      // print("remaining time " + remainingTime.toString());
-      if(remainingTime < Duration(seconds: 70)) {
-        tokenResponse = await credential.getTokenResponse(true);
-        userInfo = await credential.getUserInfo();
-        // print("called getTokenResponse, token expiration:" +
-        //     tokenResponse.expiresAt.toIso8601String());
-        await _storage.write(key: 'tokenType', value: tokenResponse.tokenType);
-        await _storage.write(key: 'refreshToken', value: tokenResponse.refreshToken);
-        await _storage.write(key: 'idToken', value: tokenResponse.idToken.toCompactSerialization());
-        await _storage.write(key: 'accessToken', value: tokenResponse.accessToken);
-        // print("Token expired in 70 seconds");
-        add(AuthenticationRefreshRequested(userInfo, tokenResponse));
+      try {
+        if(!refreshFail) {
+          var currentDate = new DateTime.now();
+          var remainingTime = tokenResponse.expiresAt.difference(currentDate);
+          // print("remaining time " + remainingTime.toString());
+          if(remainingTime < Duration(seconds: 70)) {
+            tokenResponse = await credential.getTokenResponse(true);
+            userInfo = await credential.getUserInfo();
+            // print("called getTokenResponse, token expiration:" +
+            //     tokenResponse.expiresAt.toIso8601String());
+            await _storage.write(key: 'tokenType', value: tokenResponse.tokenType);
+            await _storage.write(key: 'refreshToken', value: tokenResponse.refreshToken);
+            await _storage.write(key: 'idToken', value: tokenResponse.idToken.toCompactSerialization());
+            await _storage.write(key: 'accessToken', value: tokenResponse.accessToken);
+            // print("Token expired in 70 seconds");
+            add(AuthenticationRefreshRequested(userInfo, tokenResponse));
+          }
+        }
+      } catch(e) {
+        print(e);
       }
+
     });
 
     // var http = HttpFunctions()..getTokenResponseFn = customGetTokenResponse;
