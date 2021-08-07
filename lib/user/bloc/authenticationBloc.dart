@@ -57,9 +57,10 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
       );
 
       credential.validateToken(validateClaims: true, validateExpiry: true);
-      tokenResponse = await credential.getTokenResponse();
-      userInfo = await credential.getUserInfo();
+
       try {
+        tokenResponse = await credential.getTokenResponse();
+        userInfo = await credential.getUserInfo();
         await _storage.write(key: 'tokenType', value: tokenResponse.tokenType);
         await _storage.write(key: 'refreshToken', value: tokenResponse.refreshToken);
         await _storage.write(key: 'idToken', value: tokenResponse.idToken.toCompactSerialization());
