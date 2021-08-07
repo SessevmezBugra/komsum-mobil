@@ -45,6 +45,12 @@
 	<string>Galeriye erisim icin izin verin</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Kameraya erisim icin izin verin</string>
-
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>https</string>
+        <string>http</string>
+        <string>tel</string>
+        <string>mailto</string>
+    </array>
 </dict>
 </plist>
