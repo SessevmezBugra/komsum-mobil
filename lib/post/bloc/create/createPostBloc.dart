@@ -1,16 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komsum/helper/constants.dart';
 import 'package:komsum/post/bloc/create/createPostBarrel.dart';
 import 'package:komsum/post/model/post.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:komsum/user/bloc/authenticationBarrel.dart';
 
 class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
 
-  CreatePostBloc() : super(PostCreatedInInitialize());
+  final AuthenticationBloc authBloc;
+
+  CreatePostBloc({@required this.authBloc}) : super(PostCreatedInInitialize());
 
   @override
   Stream<CreatePostState> mapEventToState(CreatePostEvent event) async* {
@@ -36,8 +40,8 @@ class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
 
         var stream = new http.ByteStream(file.openRead());
         var length = await file.length();
-        var host = KomsumConst.host;
-        var uri = Uri.parse('http://$host:8091/post');
+        var host = KomsumConst.API_HOST;
+        var uri = Uri.parse('https://$host/post');
         var request = new http.MultipartRequest("POST", uri);
         var multipartFile = new http.MultipartFile('file', stream, length,
             filename: file.path);

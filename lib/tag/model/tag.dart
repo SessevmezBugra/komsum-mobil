@@ -18,6 +18,7 @@ class Tag extends Equatable{
     this.enDesc,
   });
 
+
   final String id;
   final String key;
   final String trDesc;

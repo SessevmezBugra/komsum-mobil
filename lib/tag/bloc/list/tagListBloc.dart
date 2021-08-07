@@ -3,13 +3,16 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:komsum/helper/constants.dart';
 import 'package:komsum/tag/bloc/list/tagListBarrel.dart';
 import 'package:komsum/tag/model/tag.dart';
+import 'package:komsum/user/bloc/authenticationBarrel.dart';
 
 class TagListBloc extends Bloc<TagListEvent, TagListState> {
-  final http.Client httpClient;
+  final AuthenticationBloc authBloc;
+  final http.Client httpClient = http.Client();
 
-  TagListBloc({@required this.httpClient})
+  TagListBloc({@required this.authBloc})
       :super(TagListLoadInProgress());
 
   @override
@@ -51,9 +54,12 @@ class TagListBloc extends Bloc<TagListEvent, TagListState> {
   }
 
   Future<List<Tag>> _fetchTags() async {
+    var token = authBloc.state.token.accessToken;
     final response = await httpClient.get(
-        Uri.http('46.101.87.81:8092', '/tag'),
-        headers: {'Content-Type': 'application/json; charset=utf-8'});
+        Uri.https(KomsumConst.API_HOST, '/tag'),
+        headers: {'Content-Type': 'application/json; charset=utf-8',
+          'Authorization': 'Bearer $token',
+        },);
 
     if (response.statusCode == 200) {
       return tagFromJson(utf8.decode(response.bodyBytes));

@@ -11,7 +11,7 @@ Post postFromJson(String str) => Post.fromJson(json.decode(str));
 String postToJson(Post data) => json.encode(data.toJson());
 
 class Post extends Equatable{
-  Post({
+  const Post({
     this.id,
     this.username,
     this.createdAt,

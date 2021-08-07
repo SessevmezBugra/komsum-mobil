@@ -1,21 +1,25 @@
 import 'dart:convert';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:komsum/geography/model/cityEntity.dart';
 import 'package:komsum/geography/model/districtEntity.dart';
 import 'package:komsum/geography/model/geography.dart';
 import 'package:komsum/geography/model/neighborhoodEntity.dart';
 import 'package:komsum/geography/model/streetEntity.dart';
+import 'package:komsum/helper/constants.dart';
+import 'package:komsum/user/bloc/authenticationBarrel.dart';
 import 'package:meta/meta.dart';
 
 import 'package:komsum/geography/bloc/list/geographyListState.dart';
 import 'package:komsum/geography/bloc/list/geographyListEvent.dart';
 
 class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
-  final http.Client httpClient;
+  final AuthenticationBloc authBloc;
+  final http.Client httpClient = http.Client();
 
-  GeographyListBloc({@required this.httpClient})
+  GeographyListBloc({@required this.authBloc})
       : super(GeographyListLoadInProgress());
 
   @override
@@ -95,9 +99,16 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
   }
 
   Future<List<CityEntity>> _fetchCities() async {
+    print("CITYYYYYY");
+    var token = authBloc.state.token.accessToken;
+    print(token);
     final response = await httpClient.get(
-        Uri.http('46.101.87.81:8090', '/geography/city'),
-        headers: {'Content-Type': 'application/json; charset=utf-8'});
+      Uri.https(KomsumConst.API_HOST, '/geography/city'),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
     if (response.statusCode == 200) {
       return cityEntityFromJson(utf8.decode(response.bodyBytes));
     }
@@ -105,9 +116,14 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
   }
 
   Future<List<DistrictEntity>> _fetchDistricts(int cityId) async {
+    var token = authBloc.state.token.accessToken;
     final response = await httpClient.get(
-        Uri.http('46.101.87.81:8090', '/geography/district/city/$cityId'),
-        headers: {'Content-Type': 'application/json; charset=utf-8'});
+      Uri.https(KomsumConst.API_HOST, '/geography/district/city/$cityId'),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
     if (response.statusCode == 200) {
       return districtEntityFromJson(utf8.decode(response.bodyBytes));
     }
@@ -115,10 +131,15 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
   }
 
   Future<List<NeighborhoodEntity>> _fetchNeighborhoods(int districtId) async {
+    var token = authBloc.state.token.accessToken;
     final response = await httpClient.get(
-        Uri.http('46.101.87.81:8090',
-            '/geography/neighborhood/district/$districtId'),
-        headers: {'Content-Type': 'application/json; charset=utf-8'});
+      Uri.https(
+          KomsumConst.API_HOST, '/geography/neighborhood/district/$districtId'),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
     if (response.statusCode == 200) {
       return neighborhoodEntityFromJson(utf8.decode(response.bodyBytes));
     }
@@ -126,10 +147,15 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
   }
 
   Future<List<StreetEntity>> _fetchStreets(int neighborhoodId) async {
+    var token = authBloc.state.token.accessToken;
     final response = await httpClient.get(
-        Uri.http('46.101.87.81:8090',
-            '/geography/street/neighborhood/$neighborhoodId'),
-        headers: {'Content-Type': 'application/json; charset=utf-8'});
+      Uri.https(KomsumConst.API_HOST,
+          '/geography/street/neighborhood/$neighborhoodId'),
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
     if (response.statusCode == 200) {
       return streetEntityFromJson(utf8.decode(response.bodyBytes));
     }

@@ -10,6 +10,7 @@ import 'package:komsum/post/model/post.dart';
 import 'package:komsum/post/widget/postListWidget.dart';
 import 'package:komsum/tag/bloc/filter/tagFilterBarrel.dart';
 import 'package:komsum/tag/widget/tagFilterListWidget.dart';
+import 'package:komsum/user/bloc/authenticationBarrel.dart';
 
 import 'helper/common/loadingIndicator.dart';
 import 'helper/common/sidebar.dart';
@@ -23,10 +24,39 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  final _scrollController = ScrollController();
+  PostListBloc _postListBloc;
 
   @override
   void initState() {
+    _scrollController.addListener(_onScroll);
+    _postListBloc = context.read<PostListBloc>();
+
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // print('_onScroll');
+
+    if (_isBottom){
+      if(!(_postListBloc.state as PostListLoadedSuccess).last) {
+        print('PostListLoad');
+        _postListBloc.add(PostListLoad());
+      }
+    }
+  }
+
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.9);
   }
 
   @override
@@ -35,6 +65,7 @@ class _HomePageState extends State<HomePage> {
       key: _scaffoldKey,
       drawer: SidebarMenu(),
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           AppBarWidget(text: "Komsum"),
           BlocBuilder<TagFilterBloc, TagFilterState>(
@@ -66,14 +97,7 @@ class _HomePageState extends State<HomePage> {
             child: Divider(),
           ),
           SliverToBoxAdapter(
-            child:
-            BlocProvider<PostListBloc>(
-              create: (BuildContext context) => PostListBloc(
-                tagFilterBloc: BlocProvider.of<TagFilterBloc>(context),
-                geographyFilterBloc: BlocProvider.of<GeographyFilterBloc>(context),
-              )..add(PostListLoad()),
-              child: PostList(),
-            )
+            child: PostList(),
           )
         ],
       ),

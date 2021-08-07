@@ -6,21 +6,26 @@ import 'package:komsum/helper/constants.dart';
 import 'package:komsum/post/bloc/list/postListBarrel.dart';
 import 'package:komsum/post/model/post.dart';
 import 'package:komsum/post/widget/postListItemWidget.dart';
+import 'package:komsum/user/bloc/authenticationBarrel.dart';
 
 class PostList extends StatelessWidget {
-  final String host = KomsumConst.host;
+
 
   @override
   Widget build(BuildContext context) {
+
     return BlocBuilder<PostListBloc, PostListState>(
       builder: (context, state) {
         if (state is PostListLoadedSuccess) {
-          List<Post> posts = state.postPage.content;
+          List<Post> posts = state.posts;
+          if (posts.isEmpty) {
+            return const Center(child: Text('Henuz bir haber yok'));
+          }
           return Container(
             child: Column(
               children: List.generate(
-                posts.length,
-                (index) => PostListItem(posts[index]),
+                state.last ? posts.length : posts.length + 1,
+                (index) => index >= state.posts.length ? CircularProgressIndicator() : PostListItem(posts[index]),
               ),
             ),
           );

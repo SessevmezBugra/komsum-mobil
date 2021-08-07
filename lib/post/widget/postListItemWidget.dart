@@ -1,18 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komsum/geography/widget/geographyFilterListWidget.dart';
 import 'package:komsum/helper/constants.dart';
 import 'package:komsum/post/model/post.dart';
 import 'package:komsum/tag/widget/tagFilterListWidget.dart';
+import 'package:komsum/user/bloc/authenticationBloc.dart';
 
 class PostListItem extends StatelessWidget {
   final Post post;
-  final host = KomsumConst.host;
+  final host = KomsumConst.API_HOST;
 
   PostListItem(this.post);
 
   @override
   Widget build(BuildContext context) {
+    final token = BlocProvider.of<AuthenticationBloc>(context).state.token.accessToken;
     return Container(
       margin: EdgeInsets.only(
         top: 2,
@@ -66,8 +69,11 @@ class PostListItem extends StatelessWidget {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(15),
                           child: Image.network(
-                            'http://$host:8094/file/' +
+                            'https://$host/file/' +
                                 post.fileId,
+                            headers: {
+                              'Authorization': 'Bearer $token',
+                            },
                             fit: BoxFit.fitWidth,
                             loadingBuilder:
                                 (BuildContext context,

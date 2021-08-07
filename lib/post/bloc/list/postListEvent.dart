@@ -1,6 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:komsum/geography/model/geography.dart';
-import 'package:komsum/tag/model/tag.dart';
 
 abstract class PostListEvent extends Equatable {
   const PostListEvent();
@@ -10,11 +8,17 @@ abstract class PostListEvent extends Equatable {
 }
 
 class PostListLoad extends PostListEvent {
-  final List<Tag> tags;
-  final List<Geography> geographies;
 
-  const PostListLoad([ this.tags = const[], this.geographies = const[] ]);
+  const PostListLoad();
 
   @override
-  List<Object> get props => [tags, geographies];
+  List<Object> get props => [];
+}
+
+class PostListInitialLoad extends PostListEvent {
+
+  const PostListInitialLoad();
+
+  @override
+  List<Object> get props => [];
 }

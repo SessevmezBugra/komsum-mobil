@@ -8,8 +8,10 @@ enum FilterType {
 class KomsumConst {
   // static const host = "10.0.2.2";
   // static const host = "10.0.2.2";
-  static const host = "46.101.87.81";
-  static const port = "STREET";
+  // static const host = "46.101.87.81";
+  // static const port = "STREET";
+  // static const host = "localhost";
+  static const API_HOST = "service.dev.komsumdannehaber.com";
 }
 
 class GeographyConst {
