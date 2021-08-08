@@ -78,7 +78,7 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
       var authenticator = oidc.Authenticator(
         client,
         scopes: List<String>.of(['openid', 'profile', 'offline_access']),
-        port: 8081,
+        redirectUri: Uri.parse('https://dev.komsumdannehaber.com'),
         urlLancher: urlLauncher,
       );
       credential = await authenticator.authorize();
