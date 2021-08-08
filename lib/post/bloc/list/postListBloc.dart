@@ -133,8 +133,9 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
     };
     print('queryParameters: ' + queryParameters.toString());
     var token = authBloc.state.token.accessToken;
+    Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/feed/post', queryParameters) : Uri.https(KomsumConst.API_HOST, '/feed/post', queryParameters);
     final response = await httpClient.get(
-      Uri.https(KomsumConst.API_HOST, '/feed/post', queryParameters),
+      uri,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Bearer $token',

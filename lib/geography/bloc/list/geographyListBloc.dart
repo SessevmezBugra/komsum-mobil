@@ -102,8 +102,9 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
     print("CITYYYYYY");
     var token = authBloc.state.token.accessToken;
     print(token);
+    Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/geography/city') : Uri.https(KomsumConst.API_HOST, '/geography/city');
     final response = await httpClient.get(
-      Uri.https(KomsumConst.API_HOST, '/geography/city'),
+      uri,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Bearer $token',
@@ -117,8 +118,9 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
 
   Future<List<DistrictEntity>> _fetchDistricts(int cityId) async {
     var token = authBloc.state.token.accessToken;
+    Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/geography/district/city/$cityId') : Uri.https(KomsumConst.API_HOST, '/geography/district/city/$cityId');
     final response = await httpClient.get(
-      Uri.https(KomsumConst.API_HOST, '/geography/district/city/$cityId'),
+      uri,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Bearer $token',
@@ -132,9 +134,9 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
 
   Future<List<NeighborhoodEntity>> _fetchNeighborhoods(int districtId) async {
     var token = authBloc.state.token.accessToken;
+    Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/geography/neighborhood/district/$districtId') : Uri.https(KomsumConst.API_HOST, '/geography/neighborhood/district/$districtId');
     final response = await httpClient.get(
-      Uri.https(
-          KomsumConst.API_HOST, '/geography/neighborhood/district/$districtId'),
+      uri,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Bearer $token',
@@ -148,9 +150,9 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
 
   Future<List<StreetEntity>> _fetchStreets(int neighborhoodId) async {
     var token = authBloc.state.token.accessToken;
+    Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/geography/street/neighborhood/$neighborhoodId') : Uri.https(KomsumConst.API_HOST, '/geography/street/neighborhood/$neighborhoodId');
     final response = await httpClient.get(
-      Uri.https(KomsumConst.API_HOST,
-          '/geography/street/neighborhood/$neighborhoodId'),
+      uri,
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Authorization': 'Bearer $token',

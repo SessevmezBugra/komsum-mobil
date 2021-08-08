@@ -40,9 +40,12 @@ class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
 
         var stream = new http.ByteStream(file.openRead());
         var length = await file.length();
-        var host = KomsumConst.API_HOST;
-        var uri = Uri.parse('https://$host/post');
-        var request = new http.MultipartRequest("POST", uri);
+        var token = authBloc.state.token.accessToken;
+        Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/post') : Uri.https(KomsumConst.API_HOST, '/post');
+        var request = new http.MultipartRequest("POST", uri)..headers.addAll(
+            {
+              'Authorization': 'Bearer $token',
+            });
         var multipartFile = new http.MultipartFile('file', stream, length,
             filename: file.path);
 

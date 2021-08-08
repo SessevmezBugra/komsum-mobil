@@ -12,6 +12,9 @@ class KomsumConst {
   // static const port = "STREET";
   // static const host = "localhost";
   static const API_HOST = "service.dev.komsumdannehaber.com";
+  // static const API_HOST = "localhost:4000";
+  // static const PROTOCOL = "http";
+  static const PROTOCOL = "https";
 }
 
 class GeographyConst {

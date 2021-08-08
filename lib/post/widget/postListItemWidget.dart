@@ -10,6 +10,7 @@ import 'package:komsum/user/bloc/authenticationBloc.dart';
 class PostListItem extends StatelessWidget {
   final Post post;
   final host = KomsumConst.API_HOST;
+  final protocol = KomsumConst.PROTOCOL;
 
   PostListItem(this.post);
 
@@ -69,7 +70,7 @@ class PostListItem extends StatelessWidget {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(15),
                           child: Image.network(
-                            'https://$host/file/' +
+                            '$protocol://$host/file/' +
                                 post.fileId,
                             headers: {
                               'Authorization': 'Bearer $token',
