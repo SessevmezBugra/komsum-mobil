@@ -9,7 +9,7 @@ import 'package:komsum/geography/model/geography.dart';
 import 'package:komsum/geography/model/neighborhoodEntity.dart';
 import 'package:komsum/geography/model/streetEntity.dart';
 import 'package:komsum/helper/constants.dart';
-import 'package:komsum/user/bloc/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/auth/authenticationBarrel.dart';
 import 'package:meta/meta.dart';
 
 import 'package:komsum/geography/bloc/list/geographyListState.dart';
@@ -27,7 +27,7 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
     if (event is GeographyCityListLoad) {
       yield* _mapGeographyCityListLoadToState();
     } else if (event is GeographyDistrictListLoad) {
-      print('g1');
+
       yield* _mapGeographyDistrictListLoadToState(event.geography);
     } else if (event is GeographyNeighborhoodListLoad) {
       yield* _mapGeographyNeighborhoodListLoadToState(event.geography);
@@ -99,9 +99,9 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
   }
 
   Future<List<CityEntity>> _fetchCities() async {
-    print("CITYYYYYY");
+
     var token = authBloc.state.token.accessToken;
-    print(token);
+
     Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/geography/city') : Uri.https(KomsumConst.API_HOST, '/geography/city');
     final response = await httpClient.get(
       uri,
@@ -113,7 +113,7 @@ class GeographyListBloc extends Bloc<GeographyListEvent, GeographyListState> {
     if (response.statusCode == 200) {
       return cityEntityFromJson(utf8.decode(response.bodyBytes));
     }
-    throw Exception('error fetching CityEntity');
+    throw Exception('error fetching CityEntity : ' + response.headers.toString());
   }
 
   Future<List<DistrictEntity>> _fetchDistricts(int cityId) async {

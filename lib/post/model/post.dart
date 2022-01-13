@@ -28,11 +28,17 @@ class Post extends Equatable{
     this.streetId,
     this.streetName,
     this.tags,
-    this.fileId
+    this.fileId,
+    this.firstName,
+    this.lastName,
+    this.profilePictureId
   });
 
   final String id;
   final String username;
+  final String firstName;
+  final String lastName;
+  final String profilePictureId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final String content;
@@ -67,6 +73,9 @@ class Post extends Equatable{
     String streetName,
     List<String> tagIds,
     String fileId,
+    String firstName,
+    String lastName,
+    String profilePictureId
   }) =>
       Post(
         id: id ?? this.id,
@@ -86,6 +95,9 @@ class Post extends Equatable{
         streetName: streetName ?? this.streetName,
         tags: tags ?? this.tags,
         fileId: fileId ?? this.fileId,
+        firstName: firstName ?? this.firstName,
+        lastName: lastName ?? this.lastName,
+        profilePictureId: profilePictureId ?? this.profilePictureId
       );
 
   factory Post.fromJson(Map<String, dynamic> json) => Post(
@@ -106,6 +118,9 @@ class Post extends Equatable{
     streetName: json["streetName"],
     tags: json["tags"] != null ? List<Tag>.from(json["tags"].map((x) => Tag.fromJson(x))) : [],
     fileId: json["fileId"],
+    firstName: json["firstName"],
+    lastName: json["lastName"],
+    profilePictureId: json["profilePictureId"]
   );
 
   Map<String, dynamic> toJson() => {
@@ -125,7 +140,10 @@ class Post extends Equatable{
     "streetId": streetId,
     "streetName": streetName,
     "tags": List<dynamic>.from(tags.map((x) => x.toJson())),
-    "fileId" : fileId
+    "fileId" : fileId,
+    "firstName": firstName,
+    "lastName": lastName,
+    "profilePictureId": profilePictureId
   };
 
   @override
@@ -133,7 +151,8 @@ class Post extends Equatable{
     id, username, createdAt, updatedAt,
     content, countryId, countryName, cityId,
     cityName, districtId, districtName, neighborhoodId,
-    neighborhoodName, streetId, streetName, tags, fileId
+    neighborhoodName, streetId, streetName, tags, fileId,
+    firstName, lastName, profilePictureId
   ];
 }
 

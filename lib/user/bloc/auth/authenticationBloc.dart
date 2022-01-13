@@ -2,23 +2,26 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:komsum/user/bloc/authenticationBarrel.dart';
-import 'package:komsum/user/bloc/authenticationEvent.dart';
-import 'package:komsum/user/model/User.dart';
+import 'package:komsum/helper/constants.dart';
+import 'package:komsum/user/bloc/auth/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/auth/authenticationEvent.dart';
 import 'package:openid_client/openid_client_io.dart' as oidc;
 import 'package:url_launcher/url_launcher.dart';
 
-class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> {
+class AuthenticationBloc
+    extends Bloc<AuthenticationEvent, AuthenticationState> {
   AuthenticationBloc() : super(AuthenticationState.unauthenticated());
 
   @override
-  Stream<AuthenticationState> mapEventToState(AuthenticationEvent event) async* {
+  Stream<AuthenticationState> mapEventToState(
+      AuthenticationEvent event) async* {
     if (event is AuthenticationLogoutRequested) {
       yield _logOut();
     } else if (event is AuthenticationLoginRequested) {
       yield* _logIn();
     } else if (event is AuthenticationRefreshRequested) {
-      yield AuthenticationState.authenticated(event.userInfo, event.tokenResponse);
+      yield AuthenticationState.authenticated(
+          event.userInfo, event.tokenResponse);
     } else {
       yield AuthenticationState.unauthenticated();
     }
@@ -28,7 +31,9 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
     var _storage = FlutterSecureStorage();
     oidc.Credential credential;
     bool refreshFail = false;
-    bool accessTokenSaved = await _storage.read(key: 'accessToken') != null;
+    bool accessTokenSaved;
+    oidc.TokenResponse tokenResponse;
+    oidc.UserInfo userInfo;
     var clientId = 'ui-app';
     urlLauncher(String url) async {
       if (await canLaunch(url)) {
@@ -37,48 +42,58 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
         throw 'Could not launch $url';
       }
     }
-    oidc.TokenResponse tokenResponse;
-    oidc.UserInfo userInfo;
 
-    if (accessTokenSaved) {
-      print("login using saved token");
-      final tt = await _storage.read(key: 'tokenType');
-      final rt = await _storage.read(key: 'refreshToken');
-      final it = await _storage.read(key: 'idToken');
+    try {
+      accessTokenSaved = await _storage.read(key: 'accessToken') != null;
 
-      var issuer = await oidc.Issuer.discover(Uri.parse('https://auth.dev.komsumdannehaber.com/auth/realms/komsumdannehaber'));
+      if (accessTokenSaved == null || accessTokenSaved) {
 
-      var client = new oidc.Client(issuer, clientId);
-      credential = client.createCredential(
-        accessToken: null, // force use refresh to get new token
-        tokenType: tt,
-        refreshToken: rt,
-        idToken: it,
-      );
+        final tt = await _storage.read(key: 'tokenType');
+        final rt = await _storage.read(key: 'refreshToken');
+        final it = await _storage.read(key: 'idToken');
 
-      credential.validateToken(validateClaims: true, validateExpiry: true);
+        // var issuer = await oidc.Issuer.discover(Uri.parse(
+        //     'https://auth.dev.komsumdannehaber.com/auth/realms/komsumdannehaber'));
+        var issuer = await oidc.Issuer.discover(Uri.parse(
+            KomsumConst.PROTOCOL + '://' + KomsumConst.KEYCLOAK_HOST + '/auth/realms/komsumdannehaber'));
 
-      try {
+        var client = new oidc.Client(issuer, clientId);
+        credential = client.createCredential(
+          accessToken: null, // force use refresh to get new token
+          tokenType: tt,
+          refreshToken: rt,
+          idToken: it,
+        );
+
+        credential.validateToken(validateClaims: true, validateExpiry: true);
+
         tokenResponse = await credential.getTokenResponse();
         userInfo = await credential.getUserInfo();
         await _storage.write(key: 'tokenType', value: tokenResponse.tokenType);
-        await _storage.write(key: 'refreshToken', value: tokenResponse.refreshToken);
-        await _storage.write(key: 'idToken', value: tokenResponse.idToken.toCompactSerialization());
-        await _storage.write(key: 'accessToken', value: tokenResponse.accessToken);
-      } catch (e) {
-        print("Error during login (refresh) " + e.toString());
-        refreshFail = true;
+        await _storage.write(
+            key: 'refreshToken', value: tokenResponse.refreshToken);
+        await _storage.write(
+            key: 'idToken',
+            value: tokenResponse.idToken.toCompactSerialization());
+        await _storage.write(
+            key: 'accessToken', value: tokenResponse.accessToken);
       }
+    } catch (e) {
+      print("Error during login (refresh) " + e.toString());
+      refreshFail = true;
     }
 
-    if (!accessTokenSaved || refreshFail) {
-      var issuer = await oidc.Issuer.discover(Uri.parse('https://auth.dev.komsumdannehaber.com/auth/realms/komsumdannehaber'));
+    if (accessTokenSaved == null || !accessTokenSaved || refreshFail) {
+      // var issuer = await oidc.Issuer.discover(Uri.parse(
+      //     'https://auth.dev.komsumdannehaber.com/auth/realms/komsumdannehaber'));
+      var issuer = await oidc.Issuer.discover(Uri.parse(
+          KomsumConst.PROTOCOL + '://' + KomsumConst.KEYCLOAK_HOST + '/auth/realms/komsumdannehaber'));
       var client = new oidc.Client(issuer, clientId);
       //auth from browser
       var authenticator = oidc.Authenticator(
         client,
         scopes: List<String>.of(['openid', 'profile', 'offline_access']),
-        redirectUri: Uri.parse('https://dev.komsumdannehaber.com'),
+        port: 8081,
         urlLancher: urlLauncher,
       );
       credential = await authenticator.authorize();
@@ -86,11 +101,14 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
       //save Token
       tokenResponse = await credential.getTokenResponse();
       userInfo = await credential.getUserInfo();
-
       await _storage.write(key: 'tokenType', value: tokenResponse.tokenType);
-      await _storage.write(key: 'refreshToken', value: tokenResponse.refreshToken);
-      await _storage.write(key: 'idToken', value: tokenResponse.idToken.toCompactSerialization());
-      await _storage.write(key: 'accessToken', value: tokenResponse.accessToken);
+      await _storage.write(
+          key: 'refreshToken', value: tokenResponse.refreshToken);
+      await _storage.write(
+          key: 'idToken',
+          value: tokenResponse.idToken.toCompactSerialization());
+      await _storage.write(
+          key: 'accessToken', value: tokenResponse.accessToken);
     }
 
     // customGetTokenResponse() async {
@@ -107,27 +125,32 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
 
     Timer.periodic(new Duration(seconds: 10), (timer) async {
       try {
-        if(!refreshFail) {
+        // if (!refreshFail) {
           var currentDate = new DateTime.now();
           var remainingTime = tokenResponse.expiresAt.difference(currentDate);
           // print("remaining time " + remainingTime.toString());
-          if(remainingTime < Duration(seconds: 70)) {
+          if (remainingTime < Duration(seconds: 70)) {
             tokenResponse = await credential.getTokenResponse(true);
             userInfo = await credential.getUserInfo();
             // print("called getTokenResponse, token expiration:" +
             //     tokenResponse.expiresAt.toIso8601String());
-            await _storage.write(key: 'tokenType', value: tokenResponse.tokenType);
-            await _storage.write(key: 'refreshToken', value: tokenResponse.refreshToken);
-            await _storage.write(key: 'idToken', value: tokenResponse.idToken.toCompactSerialization());
-            await _storage.write(key: 'accessToken', value: tokenResponse.accessToken);
+            await _storage.write(
+                key: 'tokenType', value: tokenResponse.tokenType);
+            await _storage.write(
+                key: 'refreshToken', value: tokenResponse.refreshToken);
+            await _storage.write(
+                key: 'idToken',
+                value: tokenResponse.idToken.toCompactSerialization());
+            await _storage.write(
+                key: 'accessToken', value: tokenResponse.accessToken);
             // print("Token expired in 70 seconds");
             add(AuthenticationRefreshRequested(userInfo, tokenResponse));
           }
-        }
-      } catch(e) {
+        // }
+      } catch (e) {
         print(e);
+        add(AuthenticationLoginRequested());
       }
-
     });
 
     // var http = HttpFunctions()..getTokenResponseFn = customGetTokenResponse;
@@ -152,11 +175,9 @@ class AuthenticationBloc extends Bloc<AuthenticationEvent, AuthenticationState> 
     //   closeWebView();
     //   token= await c.getTokenResponse();
     //   user = await c.getUserInfo();
+
     yield AuthenticationState.authenticated(userInfo, tokenResponse);
   }
 
-  _logOut() {
-
-  }
-
+  _logOut() {}
 }

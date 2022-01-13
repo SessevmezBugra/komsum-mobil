@@ -11,10 +11,13 @@ class KomsumConst {
   // static const host = "46.101.87.81";
   // static const port = "STREET";
   // static const host = "localhost";
-  static const API_HOST = "service.dev.komsumdannehaber.com";
+  static const KEYCLOAK_HOST = "192.168.1.103:8080";
+  // static const KEYCLOAK_HOST = "localhost:8080";
+  // static const API_HOST = "service.dev.komsumdannehaber.com";
   // static const API_HOST = "localhost:4000";
-  // static const PROTOCOL = "http";
-  static const PROTOCOL = "https";
+  static const API_HOST = "192.168.1.103:4000";
+  static const PROTOCOL = "http";
+  // static const PROTOCOL = "https";
 }
 
 class GeographyConst {
@@ -46,4 +49,6 @@ class PostKeys {
 class RouteNames {
   static const homePage = "/HomePage";
   static const createPostPage = "/CreatePostPage";
+  static const profilePage = "/ProfilePage";
+  static const picturePage = "/PicturePage";
 }

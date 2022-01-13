@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:komsum/bloc/globalBlocObserver.dart';
+import 'package:komsum/bloc/header/headerBarrel.dart';
 import 'package:komsum/helper/common/loadingIndicator.dart';
 import 'package:komsum/helper/constants.dart';
 import 'package:komsum/post/bloc/create/createPostBarrel.dart';
 import 'package:komsum/post/bloc/list/postListBarrel.dart';
-import 'package:komsum/user/bloc/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/auth/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/picture/pictureBarrel.dart';
+import 'package:komsum/user/bloc/user/userBarrel.dart';
 
 import 'helper/routes.dart';
 import 'package:http/http.dart' as http;
@@ -24,8 +27,7 @@ void main() {
         providers: [
           BlocProvider<GeographyListBloc>(
             create: (BuildContext context) => GeographyListBloc(
-                authBloc : BlocProvider.of<AuthenticationBloc>(context)
-                )
+                authBloc: BlocProvider.of<AuthenticationBloc>(context))
               ..add(GeographyCityListLoad()),
           ),
           BlocProvider<TagListBloc>(
@@ -46,10 +48,28 @@ void main() {
           BlocProvider<PostListBloc>(
             create: (BuildContext context) => PostListBloc(
               tagFilterBloc: BlocProvider.of<TagFilterBloc>(context),
-              geographyFilterBloc: BlocProvider.of<GeographyFilterBloc>(context),
+              geographyFilterBloc:
+                  BlocProvider.of<GeographyFilterBloc>(context),
               authBloc: BlocProvider.of<AuthenticationBloc>(context),
             )..add(PostListInitialLoad()),
-          )
+          ),
+          BlocProvider<PictureBloc>(
+            create: (BuildContext context) => PictureBloc(
+              authBloc: BlocProvider.of<AuthenticationBloc>(context),
+            ),
+          ),
+          BlocProvider<UserBloc>(
+            create: (BuildContext context) => UserBloc(
+              authBloc: BlocProvider.of<AuthenticationBloc>(context),
+              pictureBloc: BlocProvider.of<PictureBloc>(context),
+            )..add(LoadUser(BlocProvider.of<AuthenticationBloc>(context)
+                .state
+                .user
+                .preferredUsername)),
+          ),
+          BlocProvider<HeaderBloc>(
+            create: (BuildContext context) => HeaderBloc()..add(HeaderPinned()),
+          ),
         ],
         child: MyApp(),
       ),

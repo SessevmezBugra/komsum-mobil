@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'package:komsum/user/model/User.dart';
 import 'package:openid_client/openid_client_io.dart';
 
 enum AuthenticationStatus { inProgress, authenticated, unauthenticated }

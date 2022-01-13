@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:komsum/helper/constants.dart';
 import 'package:komsum/tag/bloc/list/tagListBarrel.dart';
 import 'package:komsum/tag/model/tag.dart';
-import 'package:komsum/user/bloc/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/auth/authenticationBarrel.dart';
 
 class TagListBloc extends Bloc<TagListEvent, TagListState> {
   final AuthenticationBloc authBloc;
@@ -43,9 +43,9 @@ class TagListBloc extends Bloc<TagListEvent, TagListState> {
   }
 
   Stream<TagListState> _mapTagDeletedToState(Tag tag) async* {
-    print("TEST1");
+
     if (state is TagListLoadedSuccess) {
-      print("TEST2");
+
       List<Tag> tags = List.from((state as TagListLoadedSuccess).tags);
       tags.remove(tag);
       yield (state as TagListLoadedSuccess).copyWith(tags);

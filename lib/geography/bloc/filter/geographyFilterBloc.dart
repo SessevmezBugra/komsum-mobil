@@ -27,7 +27,7 @@ class GeographyFilterBloc
       Geography geography) async* {
     List<Geography> geographies = List.of(state.geographyFilterList);
     geographies.add(geography);
-    print(geographies);
+
     yield GeographyFilterState(geographies);
   }
 

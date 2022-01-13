@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:equatable/equatable.dart';
 import 'package:komsum/post/model/post.dart';
@@ -12,7 +13,7 @@ abstract class CreatePostEvent extends Equatable {
 
 class PostCreated extends CreatePostEvent {
   final Post post;
-  final File file;
+  final Uint8List file;
 
   const PostCreated(this.post, this.file);
 

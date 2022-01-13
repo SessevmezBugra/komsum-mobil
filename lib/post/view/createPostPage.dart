@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:komsum/geography/bloc/filter/geographyFilterBarrel.dart';
 import 'package:komsum/geography/model/geography.dart';
@@ -26,7 +28,7 @@ class CreatePostPage extends StatefulWidget {
 class _CreatePostPageState extends State<CreatePostPage> {
   TextEditingController _textEditingController;
   ScrollController scrollController;
-  File _image;
+  Uint8List _image;
   FocusNode _fNode;
 
   @override
@@ -63,7 +65,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
     });
   }
 
-  void _onImageIconSelected(File file) {
+  void _onImageIconSelected(Uint8List file) {
     setState(() {
       _image = file;
       _fNode.unfocus();
@@ -177,7 +179,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
                                                 Radius.circular(10),
                                               ),
                                               image: DecorationImage(
-                                                image: FileImage(_image),
+                                                image: MemoryImage(_image),
                                                 fit: BoxFit.fill,
                                                 alignment: Alignment.topRight,
                                               ),
@@ -289,20 +291,33 @@ class _CreatePostPageState extends State<CreatePostPage> {
     );
   }
 
-  void setImage(ImageSource source) {
+  void setImage(ImageSource source) async {
     try {
-      ImagePicker()
-          .getImage(source: source, imageQuality: 20)
-          .then((PickedFile file) {
-        setState(() {
-          _onImageIconSelected(File(file.path));
-        });
+      final XFile file = await ImagePicker()
+          .pickImage(source: source, imageQuality: 5);
+      File selectedFile = File(file.path);
+      file.length().then((value) => print('file size : ' + value.toString()));
+      selectedFile.length().then((value) => print('selected file size : ' + value.toString()));
+      Uint8List compressedFile = await compressAndGetFile(selectedFile);
+      print('compressed file size : ' + compressedFile.length.toString());
+
+      setState(() {
+        _onImageIconSelected(compressedFile);
       });
     } catch (e) {
       setState(() {
         print(e);
       });
     }
+  }
+
+  Future<Uint8List> compressAndGetFile(File file) async {
+    var result = await FlutterImageCompress.compressWithFile(
+      file.absolute.path,
+      quality: 5,
+    );
+
+    return result;
   }
 
   void _createNewPost() {
@@ -334,7 +349,7 @@ class _CreatePostPageState extends State<CreatePostPage> {
       tags: tags,
     );
 
-    print(post.toString());
+
     BlocProvider.of<CreatePostBloc>(context).add(PostCreated(post, _image));
     Navigator.pop(context);
     _showDialog('Haber yolda...');

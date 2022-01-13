@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -11,7 +12,7 @@ import 'package:komsum/post/model/post.dart';
 import 'package:komsum/post/model/postPage.dart';
 import 'package:komsum/tag/bloc/filter/tagFilterBarrel.dart';
 import 'package:komsum/tag/model/tag.dart';
-import 'package:komsum/user/bloc/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/auth/authenticationBarrel.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PostListBloc extends Bloc<PostListEvent, PostListState> {
@@ -52,23 +53,23 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
 
   @override
   Stream<PostListState> mapEventToState(PostListEvent event) async* {
+    print('TEST0');
     if (event is PostListLoad) {
+      print('TEST1');
       yield* _mapPostListLoadToState(state);
     } else if (event is PostListInitialLoad) {
+      print('TEST2');
       yield* _mapPostListInitialLoadToState();
     }
   }
 
   Stream<PostListState> _mapPostListLoadToState(PostListLoadedSuccess state) async* {
     try {
-      print('state initial');
-      print('page Number: ' + pageNumber.toString());
+
       if (state.last) {
-        print('state control 2');
         yield state;
         return;
       }
-      print("state 1");
       //
       Geography country = geographyFilterBloc.state.geographyFilterList
           .firstWhere((e) => e.type == GeographyConst.country,
@@ -86,7 +87,7 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
           .firstWhere((e) => e.type == GeographyConst.street,
               orElse: () => Geography(null, null, null));
       List<Tag> tags = tagFilterBloc.state.tags;
-      print("state 2");
+
       final postPage = await _fetchPosts(
           countryId: country.id,
           cityId: city.id,
@@ -95,10 +96,10 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
           streetId: street.id,
           tagIds: tags.map((e) => e.id).toList(),
           pageNumber: pageNumber);
-      print("state 3");
+
 
       if (pageNumber != 0) {
-        print("PostListLoadedSuccess new State currentData lenght: " + state.posts.length.toString());
+
         yield state.copyWith(posts: List.of(state.posts)..addAll(postPage.content), last: postPage.last);
       } else {
         yield PostListLoadedSuccess(posts: postPage.content, last: postPage.last);
@@ -106,9 +107,9 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
       if (!postPage.last) {
         pageNumber++;
       }
-      print("state 4");
+
     } catch (_) {
-      print("5");
+
       print(_);
       yield PostListLoadFailure();
     }
@@ -131,7 +132,7 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
       'tagIds': tagIds,
       'pageNumber': pageNumber != null ? pageNumber.toString() : '',
     };
-    print('queryParameters: ' + queryParameters.toString());
+
     var token = authBloc.state.token.accessToken;
     Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/feed/post', queryParameters) : Uri.https(KomsumConst.API_HOST, '/feed/post', queryParameters);
     final response = await httpClient.get(
@@ -144,7 +145,7 @@ class PostListBloc extends Bloc<PostListEvent, PostListState> {
     // print(response.statusCode);
     // print(response.body);
     if (response.statusCode == 200) {
-      return postPageFromJson(response.body);
+      return postPageFromJson(utf8.decode(response.bodyBytes));
     }
     throw Exception('error fetching post list');
   }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,7 +9,7 @@ import 'package:komsum/post/bloc/create/createPostBarrel.dart';
 import 'package:komsum/post/model/post.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:komsum/user/bloc/authenticationBarrel.dart';
+import 'package:komsum/user/bloc/auth/authenticationBarrel.dart';
 
 class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
 
@@ -18,15 +19,15 @@ class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
 
   @override
   Stream<CreatePostState> mapEventToState(CreatePostEvent event) async* {
-    print('1');
+
     if (event is PostCreated) {
       yield* _mapPostCreatedToState(event.post, event.file);
     }
   }
 
-  Stream<CreatePostState> _mapPostCreatedToState(Post post, File file) async* {
+  Stream<CreatePostState> _mapPostCreatedToState(Post post, Uint8List file) async* {
     try {
-      print('2');
+
       yield PostCreatedInProgress();
       await _createPost(post, file);
       yield PostCreatedSuccess();
@@ -36,10 +37,12 @@ class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
     }
   }
 
-  Future _createPost(Post post, File file) async {
+  Future _createPost(Post post, Uint8List uint8list) async {
 
-        var stream = new http.ByteStream(file.openRead());
-        var length = await file.length();
+        var stream = new http.ByteStream(Stream.value(
+          List<int>.from(uint8list),
+        ));
+        var length =  uint8list.length;
         var token = authBloc.state.token.accessToken;
         Uri uri = KomsumConst.PROTOCOL == 'http' ? Uri.http(KomsumConst.API_HOST, '/post') : Uri.https(KomsumConst.API_HOST, '/post');
         var request = new http.MultipartRequest("POST", uri)..headers.addAll(
@@ -47,7 +50,7 @@ class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
               'Authorization': 'Bearer $token',
             });
         var multipartFile = new http.MultipartFile('file', stream, length,
-            filename: file.path);
+        filename: 'komsumapp');
 
         request.files.add(multipartFile);
         request.fields['body'] = postToJson(post);
